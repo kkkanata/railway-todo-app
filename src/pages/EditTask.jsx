@@ -11,10 +11,13 @@ export const EditTask = () => {
   const { listId, taskId } = useParams();
   const [cookies] = useCookies();
   const [title, setTitle] = useState('');
+  const [limit, setlimit] = useState('');
+  const [remainingTime, setRemainingTime] = useState('');
   const [detail, setDetail] = useState('');
   const [isDone, setIsDone] = useState();
   const [errorMessage, setErrorMessage] = useState('');
   const handleTitleChange = (e) => setTitle(e.target.value);
+  const handlelimitChange = (e) => setlimit(e.target.value);
   const handleDetailChange = (e) => setDetail(e.target.value);
   const handleIsDoneChange = (e) => setIsDone(e.target.value === 'done');
   const onUpdateTask = () => {
@@ -22,6 +25,7 @@ export const EditTask = () => {
     const data = {
       title: title,
       detail: detail,
+      limit: `${limit}:00Z`,
       done: isDone,
     };
 
@@ -54,7 +58,76 @@ export const EditTask = () => {
         setErrorMessage(`削除に失敗しました。${err}`);
       });
   };
+ /* useEffect(() => {
+    setRemainingTime(calculateRemainingTime());
+  },[limit])
+*/
+  useEffect(() => {
+    setlimit(limit.substring(0,16));
+    if (limit) {
+      const calculateRemainingTime = () => {
+        const limitDate = new Date(limit);
+        const now = new Date();
+        const diff = limitDate.getTime() - now.getTime();
+        if (diff > 0) {
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+          const minutes = Math.floor((diff / (1000 * 60)) % 60);
+          return `${days}日 ${hours}時間 ${minutes}分`;
+        } else {
+          return '期限切れ';
+        }
+      };
+  
+      setRemainingTime(calculateRemainingTime());
+    }
+  }, [limit]);
 
+ /* const calculateRemainingTime = () => {
+    if (limit) {
+      // Parse limit as local time and convert to Japan time
+      const limitDate = new Date(limit);
+      // Get current time in local time
+      const now = new Date();
+     // const japantime = new Date(now.getTime() + (9 * 3600000))//
+      const diff = limitDate - now;
+      /*if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        return `${days}日 ${hours}時間 ${minutes}分`;
+      } else {
+        return '期限切れ';
+      }
+    }
+    return '';
+  };
+*/
+  /*useEffect(() => { //初回レンダリング時と再発火時で9時間のずれがある
+    const calculateRemainingTime = () => {
+      if (limit) {
+        // Parse limit as local time and convert to Japan time
+        const limitDate = new Date(limit);
+        
+        // Get current time in local time
+        const now = new Date();
+        const japantime = new Date(now.getTime() + (9 * 3600000))
+        const diff = limitDate - japantime;
+        if (diff > 0) {
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+          const minutes = Math.floor((diff / (1000 * 60)) % 60);
+          return `${days}日 ${hours}時間 ${minutes}分`;
+        } else {
+          return '期限切れ';
+        }
+      }
+      return '';
+    };
+      const time = calculateRemainingTime();
+      setRemainingTime(time);
+  }, [limit]);
+  */
   useEffect(() => {
     axios
       .get(`${url}/lists/${listId}/tasks/${taskId}`, {
@@ -66,12 +139,13 @@ export const EditTask = () => {
         const task = res.data;
         setTitle(task.title);
         setDetail(task.detail);
+        setlimit(task.limit);
         setIsDone(task.done);
       })
       .catch((err) => {
         setErrorMessage(`タスク情報の取得に失敗しました。${err}`);
       });
-  }, []);
+  }, [cookies.token, listId, taskId]);
 
   return (
     <div>
@@ -87,6 +161,24 @@ export const EditTask = () => {
             onChange={handleTitleChange}
             className="edit-task-title"
             value={title}
+          />
+          <br />
+          <label>タスク期限日時</label>
+          <br />
+          <input
+            type="datetime-local"
+            onChange={handlelimitChange}
+            className="edit-task-limit"
+            value={limit/*.substring(0,16)*/}
+          />
+          <br />
+          <label>タスク残り日時</label>
+          <br />
+          <input
+            type="text"
+            className="edit-task-remaining"
+            value={remainingTime}
+            readOnly
           />
           <br />
           <label>詳細</label>

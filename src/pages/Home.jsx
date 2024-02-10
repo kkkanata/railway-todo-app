@@ -5,6 +5,8 @@ import axios from 'axios';
 import { Header } from '../components/Header';
 import { url } from '../const';
 import './home.scss';
+import PropTypes from 'prop-types'; // Moved to top
+
 
 export const Home = () => {
   const [isDoneDisplay, setIsDoneDisplay] = useState('todo'); // todo->未完了 done->完了
@@ -27,7 +29,7 @@ export const Home = () => {
       .catch((err) => {
         setErrorMessage(`リストの取得に失敗しました。${err}`);
       });
-  }, []);
+  }, [cookies.token]);
 
   useEffect(() => {
     const listId = lists[0]?.id;
@@ -46,7 +48,7 @@ export const Home = () => {
           setErrorMessage(`タスクの取得に失敗しました。${err}`);
         });
     }
-  }, [lists]);
+  }, [cookies.token, lists]);
 
   const handleSelectList = (id) => {
     setSelectListId(id);
@@ -63,6 +65,7 @@ export const Home = () => {
         setErrorMessage(`タスクの取得に失敗しました。${err}`);
       });
   };
+
   return (
     <div>
       <Header />
@@ -127,7 +130,7 @@ const Tasks = (props) => {
   const { tasks, selectListId, isDoneDisplay } = props;
   if (tasks === null) return <></>;
 
-  if (isDoneDisplay == 'done') {
+  if (isDoneDisplay === 'done') {
     return (
       <ul>
         {tasks
@@ -143,12 +146,29 @@ const Tasks = (props) => {
                 {task.title}
                 <br />
                 {task.done ? '完了' : '未完了'}
+                <br />
+                {task.limit}
+                <br />
               </Link>
             </li>
           ))}
       </ul>
     );
   }
+
+  const calculateRemainingTime = (limit) => {
+    const limitDate = new Date(limit);
+    const now = new Date();
+    const diff = limitDate.getTime() - now.getTime();
+    if (diff > 0) {
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      return `${days}日 ${hours}時間 ${minutes}分`;
+    } else {
+      return '期限切れ';
+    }
+  };
 
   return (
     <ul>
@@ -165,9 +185,21 @@ const Tasks = (props) => {
               {task.title}
               <br />
               {task.done ? '完了' : '未完了'}
+              <br />
+              {task.limit.substring(0,16)}
+              <br />
+              {calculateRemainingTime(task.limit.substring(0,16))}
+              <br />
             </Link>
           </li>
         ))}
     </ul>
   );
 };
+
+Tasks.propTypes = {
+  tasks: PropTypes.array.isRequired,
+  selectListId: PropTypes.string.isRequired,
+  isDoneDisplay: PropTypes.string.isRequired,
+};
+

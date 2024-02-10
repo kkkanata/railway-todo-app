@@ -10,17 +10,22 @@ export const NewTask = () => {
   const [selectListId, setSelectListId] = useState();
   const [lists, setLists] = useState([]);
   const [title, setTitle] = useState('');
+  const [limit, setlimit] = useState(''); // 
   const [detail, setDetail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [cookies] = useCookies();
-  const history = useNavigate();
+  const navigate = useNavigate();
   const handleTitleChange = (e) => setTitle(e.target.value);
+  const handlelimitChange = (e) => setlimit(e.target.value);
   const handleDetailChange = (e) => setDetail(e.target.value);
   const handleSelectList = (id) => setSelectListId(id);
+
   const onCreateTask = () => {
     const data = {
       title: title,
       detail: detail,
+      /*limit: convertDatetimeLocalToISOString(limit),*/
+      limit: `${limit}:00Z`,
       done: false,
     };
 
@@ -52,7 +57,24 @@ export const NewTask = () => {
       .catch((err) => {
         setErrorMessage(`リストの取得に失敗しました。${err}`);
       });
-  }, []);
+  }, [cookies.token]);
+/*
+  function convertDatetimeLocalToISOString(datetimeLocal) {
+    // datetimeLocalはdatetime-local形式の文字列と仮定します
+    const [datePart, timePart] = datetimeLocal.split('T'); // 日付部分と時刻部分に分割
+
+    // 年、月、日を取得
+    const [year, month, day] = datePart.split('-');
+    
+    // 時、分を取得
+    const [hours, minutes] = timePart.split(':');
+
+    // ISO 8601形式の文字列を作成し、タイムゾーン情報を追加
+    const isoString = `${year}-${month}-${day}T${hours}:${minutes}:00Z`;
+
+    return isoString;
+}
+*/
 
   return (
     <div>
@@ -80,6 +102,14 @@ export const NewTask = () => {
             type="text"
             onChange={handleTitleChange}
             className="new-task-title"
+          />
+          <br /> 
+          <label>タスク期限日時</label>
+          <br />
+          <input
+            type="datetime-local"
+            onChange={handlelimitChange}
+            className="new-task-deadLineDate"
           />
           <br />
           <label>詳細</label>
