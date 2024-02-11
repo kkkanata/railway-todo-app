@@ -66,6 +66,18 @@ export const Home = () => {
       });
   };
 
+var listItems = document.getElementsByTagName('li');
+
+// 取得したすべての<li>要素に対してループを行い、keydownイベントをリッスンします
+for (var i = 0; i < listItems.length; i++) {
+    listItems[i].addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            // Enterキーが押されたときの処理を記述します
+            event.target.click(); // クリックイベントを発火させます
+        }
+    });
+}
+
   return (
     <div>
       <Header />
@@ -89,7 +101,7 @@ export const Home = () => {
             {lists.map((list, key) => {
               const isActive = list.id === selectListId;
               return (
-                <li
+                <li id="todolist" tabIndex="0"
                   key={key}
                   className={`list-tab-item ${isActive ? 'active' : ''}`}
                   onClick={() => handleSelectList(list.id)}
